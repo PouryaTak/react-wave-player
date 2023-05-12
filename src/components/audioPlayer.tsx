@@ -2,36 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { PlayCircle, PauseCircle } from "react-feather";
 import { durationToTime } from "../utils/functions";
 
-
-
 export interface AudioPlayerProps {
-    file: string;
-    strokeWidth?: number;
-    baseColor?: string;
-    indicatorColor?: string;
-  }
-  
+  file: string;
+  strokeWidth?: number;
+  baseColor?: string;
+  indicatorColor?: string;
+}
+
 export default function AudioPlayer({
   file,
   strokeWidth = 2,
   baseColor = "#555",
-  indicatorColor = "#f80"
+  indicatorColor = "#f80",
 }: AudioPlayerProps) {
   const audioContext = new AudioContext();
   const audio = useRef(new Audio(file));
   const canvas = useRef<LegacyRef<HTMLCanvasElement>>();
   const canvasIndicator = useRef<LegacyRef<HTMLCanvasElement>>();
-//   const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-//   const canvasIndicator = document.querySelector(
-//     "#indicator"
-//   ) as HTMLCanvasElement;
   const initialCanvasWidth = useRef(0);
   const canvasContainer = useRef<HTMLElement>();
   const [duration, setDuration] = useState("00:00");
   const [audioTime, setAudioTime] = useState("00:00");
   const intervalId = useRef<any>();
   const [isPlaying, setIsPlaying] = useState(false);
-console.log(canvas.current);
 
   const playAudio = () => {
     audio.current.play();
@@ -44,8 +37,11 @@ console.log(canvas.current);
     const currentPosition =
       (audio.current.currentTime * 100) / audio.current.duration;
     setAudioTime(durationToTime(Math.round(audio.current.currentTime)));
-    canvasIndicator.current.style.setProperty("--position", currentPosition.toFixed(2));
-    if (currentPosition === 100) {
+    canvasIndicator.current.style.setProperty(
+      "--position",
+      currentPosition.toFixed(2)
+    );
+    if (currentPosition >= 100) { 
       clearInterval(intervalId.current);
       setIsPlaying(false);
     }
@@ -147,37 +143,38 @@ console.log(canvas.current);
 
   const drawAudio = (url: string) => {
     fetch(url)
-      .then((response) => {
-        console.log(response.arrayBuffer());
-        
-        return response.arrayBuffer()})
+      .then((response) => response.arrayBuffer())
       .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer))
       .then((audioBuffer) => draw(normalizeData(filterData(audioBuffer))));
   };
 
-  const handleSeekChange = (e:any) => {
-    const selectedPosition:number = (e.offsetX * 100) / canvas.current.clientWidth
-    canvasIndicator.current.style.setProperty('--position', selectedPosition.toFixed(2))
-    audio.current.currentTime = ((Number(selectedPosition.toFixed(1))* audio.current.duration)/100)
-    console.log(e.offsetX, canvas.current.clientWidth,selectedPosition)
-}
+  const handleSeekChange = (e: any) => {
+    const selectedPosition: number =
+      (e.offsetX * 100) / canvas.current.clientWidth;
+    canvasIndicator.current.style.setProperty(
+      "--position",
+      selectedPosition.toFixed(2)
+    );
+    audio.current.currentTime =
+      (Number(selectedPosition.toFixed(1)) * audio.current.duration) / 100;
+    console.log(e.offsetX, canvas.current.clientWidth, selectedPosition);
+  };
 
   useEffect(() => {
     audio.current.addEventListener("canplaythrough", () => {
       setDuration(durationToTime(Math.round(audio.current?.duration)));
       drawAudio(file);
     });
-    initialCanvasWidth.current= canvasContainer.current?.clientWidth as number;
+    initialCanvasWidth.current = canvasContainer.current?.clientWidth as number;
     canvasIndicator.current?.style?.setProperty("--position", "0");
-    canvas.current.addEventListener('mouseup', handleSeekChange)
-    return ()=> {
-      canvas.current.removeEventListener('mouseup', handleSeekChange)
-    }
+    canvas.current.addEventListener("mouseup", handleSeekChange);
+    return () => {
+      canvas.current.removeEventListener("mouseup", handleSeekChange);
+    };
   }, []);
 
   return (
     <>
-      {/* <audio src={url} controls/> */}
       <div className="audio_player">
         <div className="sec01 sec00">
           <button className="playControl" onClick={handlePlayback}>
@@ -188,7 +185,7 @@ console.log(canvas.current);
           <select name="" id="speed" defaultValue={1}>
             <option value="2">2X</option>
             <option value="1.5">1.5X</option>
-            <option value="1" selected>
+            <option value="1">
               1X
             </option>
             <option value="0.7">0.7X</option>
